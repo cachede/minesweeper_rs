@@ -5,7 +5,7 @@ use std::fs;
 fn main() {
 
     if env::args().count() != 2  {
-        println!("Please enter exactly one argument: ");
+        println!("Please enter exactly one argument: The argument should point to a ms file");
         return;
     }
 
@@ -14,7 +14,7 @@ fn main() {
     let minesweeper_vec : Vec<Vec<char>> = minesweeper_string.lines().map(|line| line.chars().collect()).collect();
 
     if !check_valid_vec(&minesweeper_vec) {
-        eprintln!("Invalid map");
+        eprintln!("Invalid map: it should be a rectangle");
         return;
     }
 
@@ -75,22 +75,23 @@ fn solve_minesweeper(minesweeper_vec : &Vec<Vec<char>>) -> Vec<Vec<char>> {
 
     let mut result: Vec<Vec<char>> = minesweeper_vec.clone();
 
-    for (i, row) in result.iter_mut().enumerate() {
 
-        for (j, c) in row.iter_mut().enumerate() {
+    for (i, row) in minesweeper_vec.iter().enumerate() {
+
+        for j in 0..row.len() {
 
             if minesweeper_vec[i][j] == '*' {
-                result[j][i] = '*';
+                result[i][j] = '*';
                 continue;
             }
 
             let mut bombs : u32 = 0;
 
-            // check horizontally
-            // check vertically
-            // check diagonal
+            bombs += check_horizontal(&minesweeper_vec, i, j);
+            bombs += check_vertical(&minesweeper_vec, i, j);
+            bombs += check_diagonal(&minesweeper_vec, i, j);
 
-            result[j][i] = from_digit(bombs, 10).unwrap();
+            result[i][j] = from_digit(bombs, 10).unwrap();
 
         }
     }
@@ -98,140 +99,88 @@ fn solve_minesweeper(minesweeper_vec : &Vec<Vec<char>>) -> Vec<Vec<char>> {
     result
 }
 
-/*
-fn solve_minesweeper(minesweeper_map : &String) -> String {
-
-    let mut result_map : String = String::new();
-    let minesweeper_map_width = minesweeper_map.split('\n').next().unwrap().len();
-    println!("Minesweeper Map Width: {}", minesweeper_map_width);
-    let minesweeper_map_height = minesweeper_map.split('\n').count();
-    println!("Minesweeper Map Height: {}", minesweeper_map_height);
-
-    for (index, line) in minesweeper_map.split('\n').enumerate() {
-
-        for (i, c) in line.chars().enumerate() {
-
-            if c != '.' && c != '\n'{
-                result_map.push('*');
-                continue;
-            }
-
-            let mut bombs : u32 = 0;
-
-            bombs += check_map_horizontal(&minesweeper_map, index, i, minesweeper_map_width);
-            bombs += check_map_vertical(&minesweeper_map, index, i, minesweeper_map_width, minesweeper_map_height);
-            bombs += check_map_diagonal(&minesweeper_map, index, i, minesweeper_map_width, minesweeper_map_height);
-
-            result_map.push(from_digit(bombs, 10).unwrap());
-        }
-
-        result_map.push('\n');
-    }
-
-
-    result_map
-}
-
-fn check_map_horizontal(minesweeper_map : &String, line_index : usize, column_index : usize, map_length : usize) -> u32 {
-
-    let local_map = minesweeper_map.split('\n').skip(line_index).next().unwrap().to_string();
-
-    if column_index == 0 {
-        // checke nur rechte seite
-
-        if local_map.chars().nth(column_index + 1).unwrap() == '*' {
-            return 1;
-        } else {
-            return 0;
-        }
-
-    }
-    if column_index == map_length - 1 {
-        // checke nur linke seite
-
-        if local_map.chars().nth(column_index - 1).unwrap() == '*' {
-            return 1;
-        } else {
-            return 0;
-        }
-
-    }
+fn check_horizontal(minesweeper_vec : &Vec<Vec<char>>, row : usize, column : usize) -> u32 {
 
     let mut bombs : u32 = 0;
-    let left_side = column_index - 1;
-    if local_map.chars().nth(left_side).unwrap() == '*' {
-        bombs += 1;
-    }
-    let right_side = column_index + 1;
-    if local_map.chars().nth(right_side).unwrap() == '*' {
-        bombs += 1;
-    }
 
+    let column_left_search_index : i32 = column as i32 - 1;
+    let column_right_search_index : i32 = column as i32 + 1;
 
-    bombs
-}
+    if column_left_search_index >= 0 {
 
-fn check_map_vertical(minesweeper_map : &String, line_index : usize, column_index : usize, map_length : usize, map_width : usize) -> u32 {
+        if minesweeper_vec[row][column_left_search_index as usize] == '*' {
 
-    let local_map : String = minesweeper_map.split('\n').collect();
-
-    //nur unten
-    if line_index == 0 {
-
-        let one_down = column_index + map_length;
-        if local_map.chars().nth(column_index + map_length).unwrap() == '*' {
-            return 1;
-        } else {
-            return 0;
+            bombs += 1;
         }
     }
+    if column_right_search_index < minesweeper_vec[row].len() as i32 {
 
-    //nur oben
-    if line_index == map_width - 1 {
+        if minesweeper_vec[row][column_right_search_index as usize] == '*' {
 
-        if local_map.chars().nth(line_index * map_length + column_index - map_length).unwrap() == '*' {
-            return 1;
-        } else {
-            return 0;
+            bombs += 1;
         }
-    }
-
-    let mut bombs : u32 = 0;
-    let top = line_index * map_length + column_index - map_length;
-    if local_map.chars().nth(top).unwrap() == '*' {
-        bombs += 1;
-    }
-    let bottom = line_index * map_length + column_index + map_length;
-    if local_map.chars().nth(bottom).unwrap() == '*' {
-        bombs += 1;
     }
 
     bombs
 }
 
-fn check_map_diagonal(minesweeper_map : &String, line_index : usize, column_index : usize, map_length : usize, map_width : usize) -> u32 {
+fn check_vertical(minesweeper_vec : &Vec<Vec<char>>, row : usize, column : usize) -> u32 {
 
-    let local_map : String = minesweeper_map.split('\n').collect();
     let mut bombs : u32 = 0;
 
+    let row_up_search_index : i32 = row as i32 - 1;
+    let row_down_search_index : i32 = row as i32 + 1;
 
+    if row_up_search_index >= 0 {
 
+        if minesweeper_vec[row_up_search_index as usize][column] == '*' {
+            bombs += 1
+        }
+    }
+    if row_down_search_index < minesweeper_vec.len() as i32 {
+
+        if minesweeper_vec[row_down_search_index as usize][column] == '*' {
+            bombs += 1;
+        }
+    }
 
     bombs
 }
 
-*/
+fn check_diagonal(minesweeper_vec: &Vec<Vec<char>>, row : usize, column : usize) -> u32 {
 
-fn check_valid_map(minesweeper_map : &String) -> bool {
+    let mut bombs : u32 = 0;
 
-    let mut whatever = minesweeper_map.split('\n');
-    let first_row = whatever.next().unwrap().len();
+    let row_up_search_index : i32 = row as i32 - 1;
+    let row_down_search_index : i32 = row as i32 + 1;
+    let column_left_search_index : i32 = column as i32 - 1;
+    let column_right_search_index : i32 = column as i32 + 1;
 
-    for str in whatever {
-        if str.len() != first_row {
-            return false;
+    if row_up_search_index >= 0 && column_left_search_index >= 0 {
+
+        if minesweeper_vec[row_up_search_index as usize][column_left_search_index as usize] == '*' {
+            bombs += 1;
+        }
+    }
+    if row_up_search_index >= 0 && column_right_search_index < minesweeper_vec[row_up_search_index as usize].len() as i32 {
+
+        if minesweeper_vec[row_up_search_index as usize][column_right_search_index as usize] == '*' {
+            bombs += 1;
+        }
+    }
+    if row_down_search_index < minesweeper_vec.len() as i32 && column_left_search_index >= 0 {
+
+        if minesweeper_vec[row_down_search_index as usize][column_left_search_index as usize] == '*' {
+            bombs += 1;
+        }
+    }
+    if row_down_search_index < minesweeper_vec.len() as i32 && column_right_search_index < minesweeper_vec[row_down_search_index as usize].len() as i32 {
+
+        if minesweeper_vec[row_down_search_index as usize][column_right_search_index as usize] == '*' {
+            bombs += 1;
         }
     }
 
-    true
+    bombs
 }
+
