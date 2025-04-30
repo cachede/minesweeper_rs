@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::io;
 use std::io::ErrorKind;
 
+//TODO: Maybe add extra parameters, if the user wants to provide an extra directory for input/output.
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     if env::args().count() != 2 {
         println!("Please enter exactly one argument: The argument should point to a ms file");
@@ -106,7 +107,8 @@ pub fn solve_minesweeper(minesweeper_vec: &Vec<Vec<char>>) -> Result<Vec<Vec<cha
                 result[i][j] = '*';
                 continue;
             }
-            if *minesweeper_vec.get(i).unwrap().get(j).unwrap() != ' ' && *minesweeper_vec.get(i).unwrap().get(j).unwrap() != '*' {
+            if *minesweeper_vec.get(i).unwrap().get(j).unwrap() != ' ' &&
+                *minesweeper_vec.get(i).unwrap().get(j).unwrap() != '*' {
 
                 return Err(io::Error::new(ErrorKind::InvalidData, "Invalid character"));
             }
@@ -148,24 +150,6 @@ fn check_horizontal(minesweeper_vec: &Vec<Vec<char>>, row: usize, column: usize)
         }
     }
 
-    /*
-    if column_left_search_index >= 0 {
-
-
-        /*
-        if minesweeper_vec[row][column_left_search_index as usize] == '*' {
-            bombs += 1;
-        }
-        */
-    }
-    if column_right_search_index < minesweeper_vec[row].len() as i32 {
-        if minesweeper_vec[row][column_right_search_index as usize] == '*' {
-            bombs += 1;
-        }
-    }
-
-     */
-
     bombs
 }
 
@@ -190,21 +174,6 @@ fn check_vertical(minesweeper_vec: &Vec<Vec<char>>, row: usize, column: usize) -
             }
         }
     }
-
-    /*
-
-    if row_up_search_index >= 0 {
-        if minesweeper_vec[row_up_search_index as usize][column] == '*' {
-            bombs += 1
-        }
-    }
-    if row_down_search_index < minesweeper_vec.len() as i32 {
-        if minesweeper_vec[row_down_search_index as usize][column] == '*' {
-            bombs += 1;
-        }
-    }
-
-     */
 
     bombs
 }
@@ -248,38 +217,6 @@ fn check_diagonal(minesweeper_vec: &Vec<Vec<char>>, row: usize, column: usize) -
             }
         }
     }
-
-    /*
-    if row_up_search_index >= 0 && column_left_search_index >= 0 {
-        if minesweeper_vec[row_up_search_index as usize][column_left_search_index as usize] == '*' {
-            bombs += 1;
-        }
-    }
-    if row_up_search_index >= 0
-        && column_right_search_index < minesweeper_vec[row_up_search_index as usize].len() as i32
-    {
-        if minesweeper_vec[row_up_search_index as usize][column_right_search_index as usize] == '*'
-        {
-            bombs += 1;
-        }
-    }
-    if row_down_search_index < minesweeper_vec.len() as i32 && column_left_search_index >= 0 {
-        if minesweeper_vec[row_down_search_index as usize][column_left_search_index as usize] == '*'
-        {
-            bombs += 1;
-        }
-    }
-    if row_down_search_index < minesweeper_vec.len() as i32
-        && column_right_search_index < minesweeper_vec[row_down_search_index as usize].len() as i32
-    {
-        if minesweeper_vec[row_down_search_index as usize][column_right_search_index as usize]
-            == '*'
-        {
-            bombs += 1;
-        }
-    }
-
-     */
 
     bombs
 }
